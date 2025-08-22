@@ -21,6 +21,7 @@ env:
   AWS_REGION: ap-southeast-1
   ECR_REGISTRY: 253921445383.dkr.ecr.ap-southeast-1.amazonaws.com
   ECR_REPOSITORY: nodejs-random-color
+  ECR_TAG: ${GITHUB_SHA::7}
 
 jobs:
   build-and-push:
@@ -49,10 +50,10 @@ jobs:
     - name: Tag and push image to ECR
       run: |
         docker tag nodejs-random-color:latest 253921445383.dkr.ecr.ap-southeast-1.amazonaws.com/nodejs-random-color:latest
-        docker tag nodejs-random-color:latest ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ inputs.version }}
-        docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ inputs.version }}
+        docker tag nodejs-random-color:latest ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.ECR_TAG }}
+        docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.ECR_TAG }}
         
     - name: Output image URI
       run: |
-        echo "IMAGE_URI=${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ inputs.version }}" >> $GITHUB_OUTPUT
+        echo "IMAGE_URI=${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.ECR_TAG }}" >> $GITHUB_OUTPUT
       id: build-output
