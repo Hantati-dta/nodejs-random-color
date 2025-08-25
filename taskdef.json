@@ -1,9 +1,8 @@
 {
-    "executionRoleArn": "arn:aws:iam::430950558682:role/nodejs-task-execution-role",
     "containerDefinitions": [
         {
-            "name": "nodejs-container",
-            "image": "<IMAGE_NAME>",
+            "name": "nodejs-service",
+            "image": "253921445383.dkr.ecr.ap-southeast-1.amazonaws.com/nodejs-random-color",
             "essential": true,
             "portMappings": [
                 {
