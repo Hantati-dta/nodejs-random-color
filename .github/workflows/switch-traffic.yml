@@ -1,7 +1,8 @@
 name: Shift Traffic
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: {}
+  workflow_call: {}
 
 jobs:
   shift:
