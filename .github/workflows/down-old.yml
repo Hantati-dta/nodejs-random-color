@@ -9,6 +9,12 @@ on:
       service_name:
         description: "Tên ECS service"
         required: true
+  workflow_call:
+    inputs:
+      cluster_name:
+        description: 'ECS Cluster name to clear resources from'
+        required: true
+        type: string
 
 jobs:
   scale-down:
