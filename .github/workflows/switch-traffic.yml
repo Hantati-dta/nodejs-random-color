@@ -1,0 +1,60 @@
+name: Shift Traffic
+
+on:
+  workflow_dispatch:
+
+jobs:
+  shift:
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: ap-southeast-1
+      ALB_ARN: arn:aws:elasticloadbalancing:ap-southeast-1:253921445383:loadbalancer/app/test-alb/9f2e75acb7841e4c
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Swap listeners
+        run: |
+          # Lấy tất cả listener
+          LISTENERS=$(aws elbv2 describe-listeners \
+            --load-balancer-arn $ALB_ARN \
+            --query "Listeners[*].ListenerArn" \
+            --output text)
+
+          echo "Found listeners: $LISTENERS"
+
+          # Giả sử có 2 listener (blue, green)
+          BLUE_LISTENER=$(echo $LISTENERS | awk '{print $1}')
+          GREEN_LISTENER=$(echo $LISTENERS | awk '{print $2}')
+
+          echo "Blue listener: $BLUE_LISTENER"
+          echo "Green listener: $GREEN_LISTENER"
+
+          # Lấy target group hiện tại
+          BLUE_TG=$(aws elbv2 describe-listeners \
+            --listener-arn $BLUE_LISTENER \
+            --query "Listeners[0].DefaultActions[0].TargetGroupArn" \
+            --output text)
+
+          GREEN_TG=$(aws elbv2 describe-listeners \
+            --listener-arn $GREEN_LISTENER \
+            --query "Listeners[0].DefaultActions[0].TargetGroupArn" \
+            --output text)
+
+          echo "Blue listener → $BLUE_TG"
+          echo "Green listener → $GREEN_TG"
+
+          # Swap: Blue listener dùng GREEN_TG, Green listener dùng BLUE_TG
+          aws elbv2 modify-listener \
+            --listener-arn $BLUE_LISTENER \
+            --default-actions Type=forward,TargetGroupArn=$GREEN_TG
+
+          aws elbv2 modify-listener \
+            --listener-arn $GREEN_LISTENER \
+            --default-actions Type=forward,TargetGroupArn=$BLUE_TG
+
+          echo "✅ Swapped traffic between BLUE and GREEN"
