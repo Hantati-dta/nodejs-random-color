@@ -19,6 +19,6 @@
     "networkMode": "awsvpc",
     "cpu": "256",
     "memory": "512",
-    "family": "nodejs-task-definition"
-    "executionRoleArn": "arn:aws:iam::253921445383:role/ecsTaskExecutionRole",
+    "family": "nodejs-task-definition",
+    "executionRoleArn": "arn:aws:iam::253921445383:role/ecsTaskExecutionRole"
 }
