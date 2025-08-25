@@ -1,34 +1,24 @@
 name: Deploy to ECS
 
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       version:
-        description: 'Version tag to deploy'
         required: true
         type: string
       cluster_name:
-        description: 'ECS Cluster name'
         required: true
         type: string
-env:
-  AWS_REGION: ap-southeast-1
-  ECR_REGISTRY: 253921445383.dkr.ecr.ap-southeast-1.amazonaws.com
-  ECR_REPOSITORY: nodejs-random-color
-  TASK_FAMILY: nodejs-task-definition
-  SERVICE_NAME: nodejs-service
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
 
 jobs:
-  build:
-    uses: ./.github/workflows/testbuild.yml
-    with:
-      version: ${{ inputs.version }}
-    secrets:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
   deploy:
     runs-on: ubuntu-latest
-    
+    environment: prod
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -38,7 +28,7 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ env.AWS_REGION }}
+        aws-region: ${{ vars.AWS_REGION }}
         mask-aws-account-id: false
         
     - name: Render new task definition
@@ -47,13 +37,13 @@ jobs:
       with:
         task-definition: ./taskdef.json
         container-name: nodejs-service
-        image: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ inputs.version }}
+        image: ${{ vars.ECR_REGISTRY }}/${{ vars.ECR_REPOSITORY }}:${{ inputs.version }}
 
     - name: Deploy to ECS
       uses: aws-actions/amazon-ecs-deploy-task-definition@v2
       with:
         task-definition: ${{ steps.task-def.outputs.task-definition }}
-        service: ${{ env.SERVICE_NAME }}
+        service: ${{ vars.SERVICE_NAME }}
         cluster: ${{ inputs.cluster_name }}
         desired-count: 2 
         wait-for-service-stability: true
